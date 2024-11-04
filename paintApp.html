@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Paint App</title>
+    <link rel="stylesheet" href="paintApp.css">
+</head>
+<body>
+    <div class="container">
+        <canvas id="paintCanvas"></canvas>
+        
+        <div class="toolbar">
+            <div>
+                <label for="colorPicker">Culoare:</label>
+                <input type="color" id="colorPicker" value="#000000">
+            </div>
+            <div>
+                <label for="brushSize">Grosime pensulă:</label>
+                <input type="range" id="brushSize" min="1" max="20" value="5">
+            </div>
+            <div>
+                <button id="newImageButton" class="control-btn">Imagine Nouă</button>
+                <button id="loadImageButton" class="control-btn">Deschide Imagine</button>
+                <input type="file" id="imageLoader" style="display: none;" accept="image/*">
+                <button id="saveButton" class="save-btn">Salvează Imaginea</button>
+                <button id="clearButton" class="clear-btn">Curăță</button>
+                <input type="color" id="backgroundColorPicker" value="#FFFFFF">
+<button id="eraserButton">Eraser</button>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="paintApp.js"></script>
+</body>
+</html>
