@@ -74,3 +74,8 @@ button.save-btn {
 button.save-btn:hover {
     background-color: #218838;
 }
+
+.control-btn.active {
+    background-color: #4CAF50;
+    color: white;
+}
