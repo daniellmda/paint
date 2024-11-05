@@ -8,7 +8,10 @@ class PaintApp {
         this.history = [];
         this.isEraser = false;
         this.isFillTool = false;
-        
+        this.currentShape = null; // Pentru desenarea formelor
+        this.baseImage = null;
+        this.startX = 0;
+        this.startY = 0;
         this.canvas.width = 800;
         this.canvas.height = 600;
 
@@ -55,19 +58,53 @@ class PaintApp {
         document.getElementById('eraserButton').classList.remove('active');
     }
 
+
     setupEventListeners() {
         this.canvas.addEventListener("mousedown", (event) => {
             if (this.isFillTool) {
                 const { x, y } = this.getCoordinates(event);
                 this.floodFill(Math.round(x), Math.round(y), this.brushColor);
+            } else if (this.currentShape) {
+                // Salvăm starea curentă a canvas-ului
+                this.baseImage = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
+                const { x, y } = this.getCoordinates(event);
+                this.startX = x;
+                this.startY = y;
+                this.drawing = true;
             } else {
                 this.startDrawing(event);
             }
         });
-        this.canvas.addEventListener("mousemove", (event) => this.draw(event));
-        this.canvas.addEventListener("mouseup", () => this.stopDrawing());
-        this.canvas.addEventListener("mouseleave", () => this.stopDrawing());
 
+        this.canvas.addEventListener("mousemove", (event) => {
+            if (this.currentShape && this.drawing) {
+                this.drawShape(event);
+            } else if (!this.currentShape) {
+                this.draw(event);
+            }
+        });
+
+        
+        this.canvas.addEventListener("mouseup", () => {
+            if (this.currentShape && this.drawing) {
+                this.finishShape();
+            }
+            this.stopDrawing();
+        });
+
+        this.canvas.addEventListener("mouseleave", () => {
+            if (this.currentShape && this.drawing) {
+                this.finishShape();
+            }
+            this.stopDrawing();
+        });
+
+        // Adăugăm butoanele pentru forme geometrice
+        document.getElementById("rectangleButton").addEventListener("click", () => this.setShape('rectangle'));
+        document.getElementById("circleButton").addEventListener("click", () => this.setShape('circle'));
+        document.getElementById("lineButton").addEventListener("click", () => this.setShape('line'));
+
+        // Păstrăm listeners existenți
         document.getElementById("clearButton").addEventListener("click", () => this.clearCanvas());
         document.getElementById("saveButton").addEventListener("click", () => this.saveImage());
         document.getElementById("newImageButton").addEventListener("click", () => this.newImage());
@@ -76,11 +113,76 @@ class PaintApp {
         document.getElementById("eraserButton").addEventListener("click", () => this.activateEraser());
         document.getElementById("fillButton").addEventListener("click", () => this.activateFillTool());
         document.getElementById("brushButton").addEventListener("click", () => this.activateBrush());
-
-        // Listener pentru culoarea de fundal
         document.getElementById("backgroundColorPicker").addEventListener("input", (event) => {
             this.canvas.style.backgroundColor = event.target.value;
         });
+    }
+
+
+
+    drawShape(event) {
+        if (!this.drawing || !this.baseImage) return;
+        
+        const { x, y } = this.getCoordinates(event);
+        
+        // Restaurăm imaginea de bază
+        this.ctx.putImageData(this.baseImage, 0, 0);
+        
+        // Setăm stilul
+        this.ctx.strokeStyle = this.brushColor;
+        this.ctx.lineWidth = this.brushSize;
+        this.ctx.beginPath();
+
+        switch (this.currentShape) {
+            case 'rectangle':
+                this.ctx.rect(
+                    Math.min(this.startX, x),
+                    Math.min(this.startY, y),
+                    Math.abs(x - this.startX),
+                    Math.abs(y - this.startY)
+                );
+                break;
+            case 'circle':
+                const radius = Math.sqrt(
+                    Math.pow(x - this.startX, 2) + Math.pow(y - this.startY, 2)
+                );
+                this.ctx.arc(this.startX, this.startY, radius, 0, 2 * Math.PI);
+                break;
+            case 'line':
+                this.ctx.moveTo(this.startX, this.startY);
+                this.ctx.lineTo(x, y);
+                break;
+        }
+        
+        this.ctx.stroke();
+    }
+
+    finishShape() {
+        if (this.drawing) {
+            this.baseImage = null;
+            this.saveHistory();
+        }
+    }
+
+    setShape(shape) {
+        this.currentShape = shape;
+        this.isFillTool = false;
+        this.isEraser = false;
+        
+        // Actualizare UI
+        const buttons = ['brushButton', 'fillButton', 'eraserButton', 'rectangleButton', 'circleButton', 'lineButton'];
+        buttons.forEach(btn => document.getElementById(btn).classList.remove('active'));
+        document.getElementById(shape + 'Button').classList.add('active');
+    }
+
+    activateBrush() {
+        this.currentShape = null;
+        this.isFillTool = false;
+        this.isEraser = false;
+        // Actualizare UI
+        const buttons = ['brushButton', 'fillButton', 'eraserButton', 'rectangleButton', 'circleButton', 'lineButton'];
+        buttons.forEach(btn => document.getElementById(btn).classList.remove('active'));
+        document.getElementById('brushButton').classList.add('active');
     }
 
     getPixel(imageData, x, y) {
