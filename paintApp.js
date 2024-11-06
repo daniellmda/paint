@@ -1,36 +1,45 @@
 class PaintApp {
     constructor(canvasId) {
+        // Preluăm referința la canvas și setăm contextul de desenare 2D
         this.canvas = document.getElementById(canvasId);
         this.ctx = this.canvas.getContext("2d");
-        this.drawing = false;
-        this.brushColor = "#000000";
-        this.brushSize = 5;
-        this.history = [];
-        this.isEraser = false;
-        this.isFillTool = false;
-        this.currentShape = null; // Pentru desenarea formelor
-        this.baseImage = null;
-        this.startX = 0;
-        this.startY = 0;
+
+        // Inițializăm proprietățile de bază pentru aplicația de desenat
+        this.drawing = false; // Indică dacă utilizatorul desenează activ
+        this.brushColor = "#000000"; // Culoarea implicită a pensulei
+        this.brushSize = 5;   // Dimensiunea implicită a pensulei
+        this.history = []; // Istoricul pentru a salva acțiunile anterioare
+        this.isEraser = false; // Indică dacă este activă radiera
+        this.isFillTool = false; // Indică dacă este activă unealta de umplere
+        this.currentShape = null; // Forma geometrică curentă (dacă există)
+        this.baseImage = null; // Imaginea de bază înainte de desenarea unei forme
+        this.startX = 0; // Coordonata X de start
+        this.startY = 0; // Coordonata Y de start
+
+        // Setăm dimensiunea canvas-ului
         this.canvas.width = 800;
         this.canvas.height = 600;
 
         // Inițializare cu pensula activă
         document.getElementById('brushButton').classList.add('active');
 
+        // Inițializăm listener-ii de evenimente și salvăm istoria inițială
         this.setupEventListeners();
         this.saveHistory();
     }
 
+    // Schimbăm culoarea pensulei și dezactivăm radiera
     setColor(color) {
         this.brushColor = color;
         this.isEraser = false;
     }
 
+    // Schimbăm dimensiunea pensulei
     setSize(size) {
         this.brushSize = size;
     }
 
+    // Activăm radiera, schimbăm UI-ul pentru a reflecta această stare
     activateEraser() {
         this.isEraser = true;
         this.isFillTool = false;
@@ -40,6 +49,7 @@ class PaintApp {
         document.getElementById('eraserButton').classList.add('active');
     }
 
+    // Activăm unealta de umplere și schimbăm UI-ul
     activateFillTool() {
         this.isFillTool = true;
         this.isEraser = false;
@@ -49,6 +59,7 @@ class PaintApp {
         document.getElementById('eraserButton').classList.remove('active');
     }
 
+    // Activăm pensula și schimbăm UI-ul
     activateBrush() {
         this.isFillTool = false;
         this.isEraser = false;
@@ -58,14 +69,16 @@ class PaintApp {
         document.getElementById('eraserButton').classList.remove('active');
     }
 
-
+    // Setăm listener-ii de evenimente pentru funcționalitatea canvas-ului
     setupEventListeners() {
+    // La apăsarea mouseului pe canvas
         this.canvas.addEventListener("mousedown", (event) => {
             if (this.isFillTool) {
+        // Umplem zona cu culoarea aleasă
                 const { x, y } = this.getCoordinates(event);
                 this.floodFill(Math.round(x), Math.round(y), this.brushColor);
             } else if (this.currentShape) {
-                // Salvăm starea curentă a canvas-ului
+                // Salvăm imaginea curentă pentru a desena forma fără suprapuneri
                 this.baseImage = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
                 const { x, y } = this.getCoordinates(event);
                 this.startX = x;
@@ -76,15 +89,17 @@ class PaintApp {
             }
         });
 
+        // Când mouse-ul se mișcă pe canvas
         this.canvas.addEventListener("mousemove", (event) => {
             if (this.currentShape && this.drawing) {
+        // Desenăm forma curentă în funcție de mișcarea mouse-ului
                 this.drawShape(event);
             } else if (!this.currentShape) {
                 this.draw(event);
             }
         });
 
-        
+        // Când mouse-ul este ridicat de pe canvas
         this.canvas.addEventListener("mouseup", () => {
             if (this.currentShape && this.drawing) {
                 this.finishShape();
@@ -105,7 +120,7 @@ class PaintApp {
         document.getElementById("lineButton").addEventListener("click", () => this.setShape('line'));
         document.getElementById("bezierButton").addEventListener("click", () => this.setShape('bezier'));
 
-        // Păstrăm listeners existenți
+        // Butoane
         document.getElementById("clearButton").addEventListener("click", () => this.clearCanvas());
         document.getElementById("saveButton").addEventListener("click", () => this.saveImage());
         document.getElementById("newImageButton").addEventListener("click", () => this.newImage());
@@ -120,13 +135,13 @@ class PaintApp {
     }
 
 
-
+// Metodă pentru desenarea formelor geometrice
     drawShape(event) {
         if (!this.drawing || !this.baseImage) return;
         
         const { x, y } = this.getCoordinates(event);
         
-        // Restaurăm imaginea de bază
+       // Restaurăm imaginea de bază înainte de desenare pentru a preveni suprapunerea
         this.ctx.putImageData(this.baseImage, 0, 0);
         this.ctx.beginPath();
 
@@ -170,7 +185,7 @@ class PaintApp {
         
         this.ctx.stroke();
     }
-
+// Finalizăm desenarea formei și salvăm în istoric
     finishShape() {
         if (this.drawing) {
             this.baseImage = null;
@@ -178,6 +193,7 @@ class PaintApp {
         }
     }
 
+// Setăm forma curentă și dezactivăm radiera sau unealta de umplere
     setShape(shape) {
         this.currentShape = shape;
         this.isFillTool = false;
@@ -227,6 +243,8 @@ class PaintApp {
                Math.abs(a[3] - b[3]) <= tolerance;
     }
 
+
+    // Funcția "Flood Fill" pentru a umple o zonă de culoarea aleasă
     floodFill(startX, startY, fillColor) {
         const imageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
         const fillColorRgba = this.hexToRgba(fillColor);
@@ -266,6 +284,7 @@ class PaintApp {
         return [r, g, b, 255];
     }
 
+    // Obținem coordonatele corecte ale cursorului pe canvas
     getCoordinates(event) {
         const rect = this.canvas.getBoundingClientRect();
         const scaleX = this.canvas.width / rect.width;
@@ -275,6 +294,7 @@ class PaintApp {
         return { x, y };
     }
 
+    // Începem desenarea unei linii
     startDrawing(event) {
         this.drawing = true;
         this.ctx.beginPath();
@@ -282,6 +302,7 @@ class PaintApp {
         this.ctx.moveTo(x, y);
     }
 
+// Desenăm o linie continuă pe măsură ce mouse-ul se mișcă
     draw(event) {
         if (!this.drawing || this.isFillTool) return;
         const { x, y } = this.getCoordinates(event);
@@ -289,6 +310,7 @@ class PaintApp {
         this.ctx.lineWidth = this.brushSize;
         this.ctx.lineCap = "round";
 
+        // Dacă radiera e activă, desenăm cu alb
         if (this.isEraser) {
             this.ctx.strokeStyle = "#FFFFFF"; // sau culoarea fundalului
         } else {
@@ -299,6 +321,7 @@ class PaintApp {
         this.ctx.stroke();
     }
 
+    // Oprim desenarea liniei curente și salvăm în istoric
     stopDrawing() {
         if (this.drawing) {
             this.drawing = false;
@@ -307,6 +330,7 @@ class PaintApp {
         }
     }
 
+    // Salvăm istoricul desenului 
     saveHistory() {
         this.history.push(this.canvas.toDataURL());
     }
