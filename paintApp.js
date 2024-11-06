@@ -103,6 +103,7 @@ class PaintApp {
         document.getElementById("rectangleButton").addEventListener("click", () => this.setShape('rectangle'));
         document.getElementById("circleButton").addEventListener("click", () => this.setShape('circle'));
         document.getElementById("lineButton").addEventListener("click", () => this.setShape('line'));
+        document.getElementById("bezierButton").addEventListener("click", () => this.setShape('bezier'));
 
         // Păstrăm listeners existenți
         document.getElementById("clearButton").addEventListener("click", () => this.clearCanvas());
@@ -127,12 +128,25 @@ class PaintApp {
         
         // Restaurăm imaginea de bază
         this.ctx.putImageData(this.baseImage, 0, 0);
-        
+        this.ctx.beginPath();
+
         // Setăm stilul
         this.ctx.strokeStyle = this.brushColor;
         this.ctx.lineWidth = this.brushSize;
-        this.ctx.beginPath();
-
+   
+        if (this.currentShape === 'bezier') {
+            this.ctx.beginPath();
+            this.ctx.moveTo(this.startX, this.startY);
+    
+            // Setăm punctele de control și punctul final
+            const controlPoint1 = { x: (this.startX + x) / 2, y: this.startY };
+            const controlPoint2 = { x: x, y: (this.startY + y) / 2 };
+    
+            this.ctx.bezierCurveTo(
+                controlPoint1.x, controlPoint1.y, // Primul punct de control
+                controlPoint2.x, controlPoint2.y, // Al doilea punct de control
+                x, y                               // Punctul final
+            ); }
         switch (this.currentShape) {
             case 'rectangle':
                 this.ctx.rect(
