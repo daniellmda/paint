@@ -2,6 +2,7 @@ class PaintApp {
     constructor(canvasId) {
         // Preluăm referința la canvas și setăm contextul de desenare 2D
         this.canvas = document.getElementById(canvasId);
+        // Obținem contextul 2D pentru desenare
         this.ctx = this.canvas.getContext("2d");
 
         // Inițializăm proprietățile de bază pentru aplicația de desenat
@@ -71,10 +72,10 @@ class PaintApp {
 
     // Setăm listener-ii de evenimente pentru funcționalitatea canvas-ului
     setupEventListeners() {
-    // La apăsarea mouseului pe canvas
+        // La apăsarea mouseului pe canvas
         this.canvas.addEventListener("mousedown", (event) => {
             if (this.isFillTool) {
-        // Umplem zona cu culoarea aleasă
+                // Umplem zona cu culoarea aleasă
                 const { x, y } = this.getCoordinates(event);
                 this.floodFill(Math.round(x), Math.round(y), this.brushColor);
             } else if (this.currentShape) {
@@ -85,6 +86,7 @@ class PaintApp {
                 this.startY = y;
                 this.drawing = true;
             } else {
+            // Altfel, începem să desenăm cu pensula
                 this.startDrawing(event);
             }
         });
@@ -92,9 +94,10 @@ class PaintApp {
         // Când mouse-ul se mișcă pe canvas
         this.canvas.addEventListener("mousemove", (event) => {
             if (this.currentShape && this.drawing) {
-        // Desenăm forma curentă în funcție de mișcarea mouse-ului
+                // Desenăm forma curentă în funcție de mișcarea mouse-ului
                 this.drawShape(event);
             } else if (!this.currentShape) {
+                // Altfel, desenăm cu pensula/radiera
                 this.draw(event);
             }
         });
@@ -107,6 +110,7 @@ class PaintApp {
             this.stopDrawing();
         });
 
+        // Când mouse-ul iese din canvas
         this.canvas.addEventListener("mouseleave", () => {
             if (this.currentShape && this.drawing) {
                 this.finishShape();
@@ -120,7 +124,7 @@ class PaintApp {
         document.getElementById("lineButton").addEventListener("click", () => this.setShape('line'));
         document.getElementById("bezierButton").addEventListener("click", () => this.setShape('bezier'));
 
-        // Butoane
+        // Butoane pentru acțiuni generale
         document.getElementById("clearButton").addEventListener("click", () => this.clearCanvas());
         document.getElementById("saveButton").addEventListener("click", () => this.saveImage());
         document.getElementById("newImageButton").addEventListener("click", () => this.newImage());
@@ -129,41 +133,46 @@ class PaintApp {
         document.getElementById("eraserButton").addEventListener("click", () => this.activateEraser());
         document.getElementById("fillButton").addEventListener("click", () => this.activateFillTool());
         document.getElementById("brushButton").addEventListener("click", () => this.activateBrush());
+        // Selectare culoare fundal
         document.getElementById("backgroundColorPicker").addEventListener("input", (event) => {
             this.canvas.style.backgroundColor = event.target.value;
         });
     }
 
 
-// Metodă pentru desenarea formelor geometrice
+    // Metodă pentru desenarea formelor geometrice
     drawShape(event) {
         if (!this.drawing || !this.baseImage) return;
-        
+
         const { x, y } = this.getCoordinates(event);
-        
-       // Restaurăm imaginea de bază înainte de desenare pentru a preveni suprapunerea
+
+        // Restaurăm imaginea de bază înainte de desenare pentru a preveni suprapunerea
         this.ctx.putImageData(this.baseImage, 0, 0);
         this.ctx.beginPath();
 
         // Setăm stilul
         this.ctx.strokeStyle = this.brushColor;
         this.ctx.lineWidth = this.brushSize;
-   
+        // Desenarea curbei Bezier
         if (this.currentShape === 'bezier') {
             this.ctx.beginPath();
             this.ctx.moveTo(this.startX, this.startY);
-    
+
             // Setăm punctele de control și punctul final
             const controlPoint1 = { x: (this.startX + x) / 2, y: this.startY };
             const controlPoint2 = { x: x, y: (this.startY + y) / 2 };
-    
+            // Desenăm curba Bezier cu punctele calculate
             this.ctx.bezierCurveTo(
                 controlPoint1.x, controlPoint1.y, // Primul punct de control
                 controlPoint2.x, controlPoint2.y, // Al doilea punct de control
                 x, y                               // Punctul final
-            ); }
+            );
+        }
+
+        // Desenăm forma selectată
         switch (this.currentShape) {
             case 'rectangle':
+                // Desenăm dreptunghi folosind coordonatele minime și dimensiunile
                 this.ctx.rect(
                     Math.min(this.startX, x),
                     Math.min(this.startY, y),
@@ -172,20 +181,22 @@ class PaintApp {
                 );
                 break;
             case 'circle':
+                // Calculăm raza cercului folosind teorema lui Pitagora
                 const radius = Math.sqrt(
                     Math.pow(x - this.startX, 2) + Math.pow(y - this.startY, 2)
                 );
                 this.ctx.arc(this.startX, this.startY, radius, 0, 2 * Math.PI);
                 break;
             case 'line':
+                // Desenăm o linie dreaptă între punctul de start și poziția curentă
                 this.ctx.moveTo(this.startX, this.startY);
                 this.ctx.lineTo(x, y);
                 break;
         }
-        
+
         this.ctx.stroke();
     }
-// Finalizăm desenarea formei și salvăm în istoric
+    // Finalizăm desenarea formei și salvăm în istoric
     finishShape() {
         if (this.drawing) {
             this.baseImage = null;
@@ -193,12 +204,12 @@ class PaintApp {
         }
     }
 
-// Setăm forma curentă și dezactivăm radiera sau unealta de umplere
+    // Setăm forma curentă și dezactivăm radiera sau unealta de umplere
     setShape(shape) {
         this.currentShape = shape;
         this.isFillTool = false;
         this.isEraser = false;
-        
+
         // Actualizare UI
         const buttons = ['brushButton', 'fillButton', 'eraserButton', 'rectangleButton', 'circleButton', 'lineButton'];
         buttons.forEach(btn => document.getElementById(btn).classList.remove('active'));
@@ -238,9 +249,9 @@ class PaintApp {
 
     colorsMatch(a, b, tolerance = 0) {
         return Math.abs(a[0] - b[0]) <= tolerance &&
-               Math.abs(a[1] - b[1]) <= tolerance &&
-               Math.abs(a[2] - b[2]) <= tolerance &&
-               Math.abs(a[3] - b[3]) <= tolerance;
+            Math.abs(a[1] - b[1]) <= tolerance &&
+            Math.abs(a[2] - b[2]) <= tolerance &&
+            Math.abs(a[3] - b[3]) <= tolerance;
     }
 
 
@@ -249,16 +260,16 @@ class PaintApp {
         const imageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
         const fillColorRgba = this.hexToRgba(fillColor);
         const targetColor = this.getPixel(imageData, startX, startY);
-        
+
         if (this.colorsMatch(targetColor, fillColorRgba)) {
             return;
         }
 
-        const pixelsToCheck = [{x: startX, y: startY}];
+        const pixelsToCheck = [{ x: startX, y: startY }];
         const tolerance = 0;
 
         while (pixelsToCheck.length > 0) {
-            const {x, y} = pixelsToCheck.pop();
+            const { x, y } = pixelsToCheck.pop();
             const currentColor = this.getPixel(imageData, x, y);
 
             if (!this.colorsMatch(currentColor, targetColor, tolerance)) {
@@ -267,10 +278,10 @@ class PaintApp {
 
             this.setPixel(imageData, x, y, fillColorRgba);
 
-            if (x > 0) pixelsToCheck.push({x: x - 1, y: y});
-            if (x < this.canvas.width - 1) pixelsToCheck.push({x: x + 1, y: y});
-            if (y > 0) pixelsToCheck.push({x: x, y: y - 1});
-            if (y < this.canvas.height - 1) pixelsToCheck.push({x: x, y: y + 1});
+            if (x > 0) pixelsToCheck.push({ x: x - 1, y: y });
+            if (x < this.canvas.width - 1) pixelsToCheck.push({ x: x + 1, y: y });
+            if (y > 0) pixelsToCheck.push({ x: x, y: y - 1 });
+            if (y < this.canvas.height - 1) pixelsToCheck.push({ x: x, y: y + 1 });
         }
 
         this.ctx.putImageData(imageData, 0, 0);
@@ -302,21 +313,24 @@ class PaintApp {
         this.ctx.moveTo(x, y);
     }
 
-// Desenăm o linie continuă pe măsură ce mouse-ul se mișcă
+    // Desenăm o linie continuă pe măsură ce mouse-ul se mișcă
     draw(event) {
+        // Verificăm dacă desenarea este activă și nu folosim unealta de umplere
         if (!this.drawing || this.isFillTool) return;
         const { x, y } = this.getCoordinates(event);
 
+        // Setăm proprietățile liniei
         this.ctx.lineWidth = this.brushSize;
-        this.ctx.lineCap = "round";
+        this.ctx.lineCap = "round"; // Face ca capetele liniei să fie rotunjit
 
         // Dacă radiera e activă, desenăm cu alb
         if (this.isEraser) {
-            this.ctx.strokeStyle = "#FFFFFF"; // sau culoarea fundalului
+            this.ctx.strokeStyle = "#FFFFFF"; // Alb pentru radieră
         } else {
-            this.ctx.strokeStyle = this.brushColor;
+            this.ctx.strokeStyle = this.brushColor; // Culoarea selectată pentru pensulă
         }
 
+        // Desenăm linia până la poziția curentă
         this.ctx.lineTo(x, y);
         this.ctx.stroke();
     }
@@ -325,63 +339,83 @@ class PaintApp {
     stopDrawing() {
         if (this.drawing) {
             this.drawing = false;
-            this.ctx.closePath();
-            this.saveHistory();
+            this.ctx.closePath(); // Închide calea curentă de desenare
+            this.saveHistory(); // Salvează starea curentă în istoric
         }
     }
 
     // Salvăm istoricul desenului 
     saveHistory() {
+        // Convertește canvas-ul în format de date URL și îl adaugă în istoric
         this.history.push(this.canvas.toDataURL());
     }
 
+    // Creează o nouă imagine goala
     newImage() {
-        this.clearCanvas();
-        this.history = [];
-        this.saveHistory();
+        this.clearCanvas(); // Șterge conținutul actual
+        this.history = []; // Resetează istoricul 
+        this.saveHistory(); // Salvează starea goală în istoric
     }
 
+    // Declanșează dialogul de încărcare a imaginii
     loadImage() {
-        document.getElementById("imageLoader").click();
+        document.getElementById("imageLoader").click(); // Simulează click pe input-ul de tip file ascuns
     }
 
+      // Procesează încărcarea unei imagini
     handleImageUpload(event) {
-        const file = event.target.files[0];
-        const reader = new FileReader();
+        const file = event.target.files[0]; // Obține fișierul selectat
+        const reader = new FileReader(); // Creează un cititor de fișiere
+        // Când citirea fișierului este completă 
         reader.onload = (e) => {
-            const img = new Image();
+            const img = new Image(); // Creează un nou element de imagine
+            // Când imaginea este încărcată
             img.onload = () => {
                 this.clearCanvas();
+                 // Desenează imaginea pe întregul canvas, scalată la dimensiunile acestuia
                 this.ctx.drawImage(img, 0, 0, this.canvas.width, this.canvas.height);
-                this.saveHistory();
+                this.saveHistory(); // Salvează noua stare în istoric
             };
-            img.src = e.target.result;
+            img.src = e.target.result; // Setează sursa imaginii
         };
-        reader.readAsDataURL(file);
+        reader.readAsDataURL(file); // Citește fișierul ca URL de date
     }
 
+    // Șterge tot conținutul canvas-ului
     clearCanvas() {
+        // Șterge tot conținutul din dreptunghiul care acoperă întregul canva
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        this.saveHistory();
+        this.saveHistory(); // Salvează starea goală în istoric
     }
 
+     // Salvează imaginea pe calculator
     saveImage() {
+        // Creează un element de tip link
         const link = document.createElement("a");
+        // Setează numele fișierului de descărcat
         link.download = "paint_image.png";
+        // Convertește canvas-ul în URL de date și îl setează ca destinație pentru descărcare
         link.href = this.canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
+        // Simulează click pe link pentru a începe descărcarea
         link.click();
     }
 }
 
 // Inițializare
+
+// Așteaptă până când documentul HTML este complet încărcat
 document.addEventListener("DOMContentLoaded", () => {
+
+    // Creează o nouă instanță a aplicației Paint
     const paintApp = new PaintApp("paintCanvas");
 
+    // Configurează evenimentul pentru selectorul de culoare
     document.getElementById("colorPicker").addEventListener("input", (event) => {
-        paintApp.setColor(event.target.value);
+        paintApp.setColor(event.target.value); // Actualizează culoarea pensulei
     });
 
+        // Configurează evenimentul pentru selectorul de dimensiune a pensulei
     document.getElementById("brushSize").addEventListener("input", (event) => {
-        paintApp.setSize(event.target.value);
+        paintApp.setSize(event.target.value); // Actualizează dimensiunea pensulei
     });
 });
