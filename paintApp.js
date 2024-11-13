@@ -16,11 +16,11 @@ class PaintApp {
         this.baseImage = null; // Imaginea de bază înainte de desenarea unei forme
         this.startX = 0; // Coordonata X de start
         this.startY = 0; // Coordonata Y de start
-                // Add new Bezier curve properties
-                this.bezierPoints = [];
-                this.isDraggingPoint = false;
-                this.selectedPointIndex = -1;
-                this.bezierState = 'collecting'; // 'collecting' or 'editing'
+        // Add new Bezier curve properties
+        this.bezierPoints = [];
+        this.isDraggingPoint = false;
+        this.selectedPointIndex = -1;
+        this.bezierState = 'collecting'; // 'collecting' or 'editing'
 
         // Setăm dimensiunea canvas-ului
         this.canvas.width = 800;
@@ -371,7 +371,7 @@ class PaintApp {
         document.getElementById("imageLoader").click(); // Simulează click pe input-ul de tip file ascuns
     }
 
-      // Procesează încărcarea unei imagini
+    // Procesează încărcarea unei imagini
     handleImageUpload(event) {
         const file = event.target.files[0]; // Obține fișierul selectat
         const reader = new FileReader(); // Creează un cititor de fișiere
@@ -381,7 +381,7 @@ class PaintApp {
             // Când imaginea este încărcată
             img.onload = () => {
                 this.clearCanvas();
-                 // Desenează imaginea pe întregul canvas, scalată la dimensiunile acestuia
+                // Desenează imaginea pe întregul canvas, scalată la dimensiunile acestuia
                 this.ctx.drawImage(img, 0, 0, this.canvas.width, this.canvas.height);
                 this.saveHistory(); // Salvează noua stare în istoric
             };
@@ -400,7 +400,7 @@ class PaintApp {
     handleBezierMouseDown(x, y) {
         // Check if we're clicking near an existing point
         const pointIndex = this.findNearestPoint(x, y);
-        
+
         if (pointIndex !== -1) {
             this.isDraggingPoint = true;
             this.selectedPointIndex = pointIndex;
@@ -409,16 +409,16 @@ class PaintApp {
 
         if (this.bezierState === 'collecting' && this.bezierPoints.length < 4) {
             this.bezierPoints.push({ x, y });
-            
+
             // If we have all points, switch to editing mode
             if (this.bezierPoints.length === 4) {
                 this.bezierState = 'editing';
             }
-            
+
             this.drawBezierGuide();
-        } 
+        }
     }
-     // Salvează imaginea pe calculator
+    // Salvează imaginea pe calculator
     saveImage() {
         // Creează un element de tip link
         const link = document.createElement("a");
@@ -433,7 +433,7 @@ class PaintApp {
     handleBezierMouseDown(x, y) {
         // Check if we're clicking near an existing point
         const pointIndex = this.findNearestPoint(x, y);
-        
+
         if (pointIndex !== -1) {
             this.isDraggingPoint = true;
             this.selectedPointIndex = pointIndex;
@@ -442,12 +442,12 @@ class PaintApp {
 
         if (this.bezierState === 'collecting' && this.bezierPoints.length < 4) {
             this.bezierPoints.push({ x, y });
-            
+
             // If we have all points, switch to editing mode
             if (this.bezierPoints.length === 4) {
                 this.bezierState = 'editing';
             }
-            
+
             this.drawBezierGuide();
         }
     }
@@ -479,7 +479,7 @@ class PaintApp {
 
         // Draw guide points and lines
         this.ctx.save();
-        
+
         // Draw points
         this.bezierPoints.forEach((point, index) => {
             this.ctx.beginPath();
@@ -494,11 +494,11 @@ class PaintApp {
             this.ctx.setLineDash([5, 5]);
             this.ctx.strokeStyle = '#999';
             this.ctx.moveTo(this.bezierPoints[0].x, this.bezierPoints[0].y);
-            
+
             for (let i = 1; i < this.bezierPoints.length; i++) {
                 this.ctx.lineTo(this.bezierPoints[i].x, this.bezierPoints[i].y);
             }
-            
+
             this.ctx.stroke();
         }
 
@@ -508,14 +508,14 @@ class PaintApp {
             this.ctx.setLineDash([]);
             this.ctx.strokeStyle = this.brushColor;
             this.ctx.lineWidth = this.brushSize;
-            
+
             this.ctx.moveTo(this.bezierPoints[0].x, this.bezierPoints[0].y);
             this.ctx.bezierCurveTo(
                 this.bezierPoints[1].x, this.bezierPoints[1].y,
                 this.bezierPoints[2].x, this.bezierPoints[2].y,
                 this.bezierPoints[3].x, this.bezierPoints[3].y
             );
-            
+
             this.ctx.stroke();
         }
 
@@ -530,21 +530,21 @@ class PaintApp {
                 if (this.baseImage) {
                     this.ctx.putImageData(this.baseImage, 0, 0);
                 }
-                
+
                 // Desenăm doar curba Bezier finală
                 this.ctx.beginPath();
                 this.ctx.strokeStyle = this.brushColor;
                 this.ctx.lineWidth = this.brushSize;
-                
+
                 this.ctx.moveTo(this.bezierPoints[0].x, this.bezierPoints[0].y);
                 this.ctx.bezierCurveTo(
                     this.bezierPoints[1].x, this.bezierPoints[1].y,
                     this.bezierPoints[2].x, this.bezierPoints[2].y,
                     this.bezierPoints[3].x, this.bezierPoints[3].y
                 );
-                
+
                 this.ctx.stroke();
-                
+
                 // Salvăm în istoric
                 this.saveHistory();
             } else {
@@ -553,7 +553,7 @@ class PaintApp {
                     this.ctx.putImageData(this.baseImage, 0, 0);
                 }
             }
-            
+
             // Resetăm toate variabilele legate de Bezier
             this.bezierPoints = [];
             this.bezierState = 'collecting';
@@ -566,7 +566,7 @@ class PaintApp {
         this.currentShape = shape;
         this.isFillTool = false;
         this.isEraser = false;
-        
+
         // Inițializăm starea Bezier dacă intrăm în modul Bezier
         if (shape === 'bezier') {
             this.bezierPoints = [];
@@ -585,34 +585,34 @@ class PaintApp {
 
 
     // Modificăm și finishShape pentru a gestiona ieșirea din modul Bezier
-  // Modificăm și finishShape pentru a gestiona mai bine curățarea
-  finishShape() {
-    if (this.currentShape === 'bezier' && this.bezierPoints.length === 4) {
-        // Restaurăm imaginea de bază
-        if (this.baseImage) {
-            this.ctx.putImageData(this.baseImage, 0, 0);
+    // Modificăm și finishShape pentru a gestiona mai bine curățarea
+    finishShape() {
+        if (this.currentShape === 'bezier' && this.bezierPoints.length === 4) {
+            // Restaurăm imaginea de bază
+            if (this.baseImage) {
+                this.ctx.putImageData(this.baseImage, 0, 0);
+            }
+
+            // Desenăm doar curba finală
+            this.ctx.beginPath();
+            this.ctx.strokeStyle = this.brushColor;
+            this.ctx.lineWidth = this.brushSize;
+
+            this.ctx.moveTo(this.bezierPoints[0].x, this.bezierPoints[0].y);
+            this.ctx.bezierCurveTo(
+                this.bezierPoints[1].x, this.bezierPoints[1].y,
+                this.bezierPoints[2].x, this.bezierPoints[2].y,
+                this.bezierPoints[3].x, this.bezierPoints[3].y
+            );
+
+            this.ctx.stroke();
         }
-        
-        // Desenăm doar curba finală
-        this.ctx.beginPath();
-        this.ctx.strokeStyle = this.brushColor;
-        this.ctx.lineWidth = this.brushSize;
-        
-        this.ctx.moveTo(this.bezierPoints[0].x, this.bezierPoints[0].y);
-        this.ctx.bezierCurveTo(
-            this.bezierPoints[1].x, this.bezierPoints[1].y,
-            this.bezierPoints[2].x, this.bezierPoints[2].y,
-            this.bezierPoints[3].x, this.bezierPoints[3].y
-        );
-        
-        this.ctx.stroke();
+
+        if (this.drawing) {
+            this.baseImage = null;
+            this.saveHistory();
+        }
     }
-    
-    if (this.drawing) {
-        this.baseImage = null;
-        this.saveHistory();
-    }
-}
 
     // Adăugăm o metodă pentru a curăța explicit ghidajele Bezier
     clearBezierGuides() {
@@ -635,21 +635,21 @@ class PaintApp {
             this.ctx.setLineDash([]);
             this.ctx.strokeStyle = this.brushColor;
             this.ctx.lineWidth = this.brushSize;
-            
+
             this.ctx.moveTo(this.bezierPoints[0].x, this.bezierPoints[0].y);
             this.ctx.bezierCurveTo(
                 this.bezierPoints[1].x, this.bezierPoints[1].y,
                 this.bezierPoints[2].x, this.bezierPoints[2].y,
                 this.bezierPoints[3].x, this.bezierPoints[3].y
             );
-            
+
             this.ctx.stroke();
         }
 
         if (!onlyFinalCurve) {
             // Draw guide points and lines
             this.ctx.save();
-            
+
             // Draw points
             this.bezierPoints.forEach((point, index) => {
                 this.ctx.beginPath();
@@ -664,22 +664,22 @@ class PaintApp {
                 this.ctx.setLineDash([5, 5]);
                 this.ctx.strokeStyle = '#999';
                 this.ctx.moveTo(this.bezierPoints[0].x, this.bezierPoints[0].y);
-                
+
                 for (let i = 1; i < this.bezierPoints.length; i++) {
                     this.ctx.lineTo(this.bezierPoints[i].x, this.bezierPoints[i].y);
                 }
-                
+
                 this.ctx.stroke();
             }
 
             this.ctx.restore();
         }
     }
-      // Modificăm și handleBezierMouseDown pentru a gestiona mai bine starea de bază
-      handleBezierMouseDown(x, y) {
+    // Modificăm și handleBezierMouseDown pentru a gestiona mai bine starea de bază
+    handleBezierMouseDown(x, y) {
         // Verificăm dacă facem click aproape de un punct existent
         const pointIndex = this.findNearestPoint(x, y);
-        
+
         if (pointIndex !== -1) {
             this.isDraggingPoint = true;
             this.selectedPointIndex = pointIndex;
@@ -691,13 +691,13 @@ class PaintApp {
             if (this.bezierPoints.length === 0) {
                 this.baseImage = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
             }
-            
+
             this.bezierPoints.push({ x, y });
-            
+
             if (this.bezierPoints.length === 4) {
                 this.bezierState = 'editing';
             }
-            
+
             this.drawBezierGuide();
         }
     }
@@ -716,7 +716,7 @@ document.addEventListener("DOMContentLoaded", () => {
         paintApp.setColor(event.target.value); // Actualizează culoarea pensulei
     });
 
-        // Configurează evenimentul pentru selectorul de dimensiune a pensulei
+    // Configurează evenimentul pentru selectorul de dimensiune a pensulei
     document.getElementById("brushSize").addEventListener("input", (event) => {
         paintApp.setSize(event.target.value); // Actualizează dimensiunea pensulei
     });
